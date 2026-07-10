@@ -321,6 +321,13 @@ def main():
             "confirmación técnica de cambio de tendencia."
         )
 
+    # Preguntar por el mejorador facial (GFPGAN)
+    print("\n[MEJORADOR FACIAL] ¿Deseas activar el mejorador facial (GFPGAN)?")
+    print("⚠ ADVERTENCIA: En videos largos (>30 segundos) en Google Colab gratuito, suele agotar la memoria RAM y abortar (Killed).")
+    print("Presiona ENTER para NO activarlo (recomendado, más rápido y estable) o escribe 's' para activarlo:")
+    use_enhancer = input("> ").strip().lower()
+    enhancer_arg = "--enhancer gfpgan" if use_enhancer == 's' else ""
+
     # 5. Generar voz + subtítulos
     os.makedirs("output", exist_ok=True)
     audio_mp3 = "output/locucion.mp3"
@@ -352,7 +359,7 @@ def main():
         f"--result_dir {result_dir_abs} "
         f"--still "
         f"--preprocess full "
-        f"--enhancer gfpgan"
+        f"{enhancer_arg}"
     )
     ret = os.system(sadtalker_cmd)
     
