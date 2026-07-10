@@ -144,6 +144,12 @@ def patch_compatibility():
             "DeprecationWarning",
             "numpy.VisibleDeprecationWarning → DeprecationWarning",
         )
+        count += _replace_in_file(
+            p1,
+            "trans_params = np.array([w0, h0, s, t[0], t[1]])",
+            "trans_params = np.array([float(w0), float(h0), float(s), float(t[0]), float(t[1])])",
+            "Inhomogeneous shape in trans_params → float cast",
+        )
 
     # --- Parche 2: torchvision.transforms.functional_tensor (eliminado en torchvision ≥ 0.18) ---
     # Archivo: basicsr/data/degradations.py  (paquete instalado en site-packages)
