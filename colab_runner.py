@@ -69,42 +69,37 @@ def setup_sadtalker():
     os.system(f"pip install {' '.join(packages)}")
     print("[CONFIGURACIÓN] Entorno de SadTalker listo.")
 
-def upload_assets():
+def check_and_rename_assets():
     """
-    Solicita al usuario subir su foto del avatar y el fondo de oficina,
-    identificándolos inteligentemente por nombre o tipo.
+    Busca si existen archivos de imagen y los mapea a los nombres esperados.
     """
-    from google.colab import files
-    print("\n[SUBIDA] Sube la foto del avatar (rostro claro, preferiblemente con fondo verde sólido) y el fondo de la oficina:")
-    uploaded = files.upload()
+    avatar_img = "avatar.png"
+    office_bg = "background.png"
     
-    avatar_path = None
-    bg_path = None
-    
-    # Intentar identificar según el nombre del archivo subido
-    for filename in uploaded.keys():
-        name_lower = filename.lower()
+    # Mapeo inteligente si el usuario subió las imágenes a la raíz
+    images = [f for f in os.listdir(".") if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+    for img in images:
+        if img in [avatar_img, office_bg]:
+            continue
+        name_lower = img.lower()
         if "avatar" in name_lower or "presenta" in name_lower or "analista" in name_lower:
-            shutil.copy(filename, "avatar.png")
-            avatar_path = "avatar.png"
-            print(f"-> Identificado Avatar: {filename} (guardado como avatar.png)")
+            shutil.copy(img, avatar_img)
+            print(f"-> Mapeado avatar detectado: {img} -> avatar.png")
         elif "bg" in name_lower or "fondo" in name_lower or "despacho" in name_lower or "office" in name_lower:
-            shutil.copy(filename, "background.png")
-            bg_path = "background.png"
-            print(f"-> Identificado Fondo: {filename} (guardado como background.png)")
+            shutil.copy(img, office_bg)
+            print(f"-> Mapeado fondo detectado: {img} -> background.png")
 
-    # Fallback si los nombres no contienen las palabras clave
-    images = [f for f in uploaded.keys() if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
-    if not avatar_path and len(images) > 0:
-        shutil.copy(images[0], "avatar.png")
-        avatar_path = "avatar.png"
-        print(f"-> Asignado {images[0]} como avatar.png (primer archivo)")
-    if not bg_path and len(images) > 1:
-        shutil.copy(images[1], "background.png")
-        bg_path = "background.png"
-        print(f"-> Asignado {images[1]} como background.png (segundo archivo)")
+    if not os.path.exists(avatar_img):
+        print(f"[ERROR] No se encontró el archivo del avatar '{avatar_img}' en la carpeta de ejecución.")
+        print("Por favor, sube tu foto utilizando la barra lateral de archivos de Colab con el nombre 'avatar.png'.")
+        return False
+        
+    if not os.path.exists(office_bg):
+        print(f"[ERROR] No se encontró el archivo de fondo '{office_bg}' en la carpeta de ejecución.")
+        print("Por favor, sube tu imagen utilizando la barra lateral de archivos de Colab con el nombre 'background.png'.")
+        return False
 
-    return avatar_path, bg_path
+    return True
 
 def main():
     if not check_colab():
@@ -124,11 +119,8 @@ def main():
     from tts_generator import generate_speech
     from video_composer import composite_video_for_format
 
-    # 2. Solicitar al usuario subir las imágenes
-    avatar_img, office_bg = upload_assets()
-    
-    if not avatar_img or not office_bg:
-        print("[ERROR] Debes subir al menos la imagen de avatar y la imagen de fondo para proceder.")
+    # 2. Verificar que el usuario haya subido las imágenes
+    if not check_and_rename_assets():
         sys.exit(1)
 
     # 3. Preguntar por el guion
@@ -157,7 +149,7 @@ def main():
     audio_wav = "output/locucion.wav"
     srt_subs = "output/subtitulos.srt"
     
-    print("\n[PASO 1/4] Generando locución y alineando subtítulos...")
+    print("\n[PASO 1/3] Generando locución y alineando subtítulos...")
     generate_speech(custom_script, "es-ES-ElviraNeural", audio_mp3, srt_subs)
 
     # Convertir MP3 a WAV de 16kHz mono (formato requerido por SadTalker)
@@ -165,11 +157,11 @@ def main():
     os.system(f"ffmpeg -y -i {audio_mp3} -acodec pcm_s16le -ac 1 -ar 16000 {audio_wav}")
 
     # 5. Ejecutar la animación facial con SadTalker en GPU
-    print("\n[PASO 2/4] Animando el avatar mediante Inteligencia Artificial (GPU)...")
+    print("\n[PASO 2/3] Animando el avatar mediante Inteligencia Artificial (GPU)...")
     sadtalker_cmd = (
         f"python SadTalker/inference.py "
         f"--driven_audio {audio_wav} "
-        f"--source_image {avatar_img} "
+        f"--source_image avatar.png "
         f"--result_dir output/sadtalker_temp "
         f"--still "
         f"--preprocess full "
@@ -192,11 +184,11 @@ def main():
     output_horizontal = "output/video_final_horizontal_16_9.mp4"
     output_vertical = "output/video_final_vertical_9_16.mp4"
 
-    print("\n[PASO 3/4] Componiendo videos en formato Horizontal y Vertical...")
+    print("\n[PASO 3/3] Componiendo videos en formato Horizontal y Vertical...")
     
     # Compilar Horizontal (16:9)
     composite_video_for_format(
-        bg_path=office_bg,
+        bg_path="background.png",
         avatar_path=avatar_video,
         audio_path=audio_mp3,
         srt_path=srt_subs,
@@ -207,7 +199,7 @@ def main():
 
     # Compilar Vertical (9:16)
     composite_video_for_format(
-        bg_path=office_bg,
+        bg_path="background.png",
         avatar_path=avatar_video,
         audio_path=audio_mp3,
         srt_path=srt_subs,
@@ -216,20 +208,17 @@ def main():
         chroma_settings={"detect_color": True, "thr": 85, "s": 5}
     )
 
-    # 7. Descargar automáticamente los videos finales generados
-    print("\n[PASO 4/4] Iniciando descarga automática de los videos compilados...")
-    from google.colab import files
-    
-    if os.path.exists(output_horizontal):
-        print(f"Descargando Video Horizontal: {output_horizontal}")
-        files.download(output_horizontal)
-        
-    if os.path.exists(output_vertical):
-        print(f"Descargando Video Vertical: {output_vertical}")
-        files.download(output_vertical)
-
     print("\n" + "="*75)
     print("  ¡VIDEO PIPELINE IA COMPLETADO CON ÉXITO!")
+    print("="*75)
+    print(f"1. Video Horizontal: {os.path.abspath(output_horizontal)}")
+    print(f"2. Video Vertical:   {os.path.abspath(output_vertical)}")
+    print("\n>>> Puedes descargar los videos directamente desde la barra lateral izquierda de Colab")
+    print("    (carpeta: 'videos/output')")
+    print(">>> O ejecutando en una nueva celda de Colab:")
+    print("from google.colab import files")
+    print("files.download('output/video_final_horizontal_16_9.mp4')")
+    print("files.download('output/video_final_vertical_9_16.mp4')")
     print("="*75)
 
 if __name__ == "__main__":
