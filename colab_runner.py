@@ -16,7 +16,7 @@ def check_colab() -> bool:
 def setup_sadtalker():
     """
     Descarga e instala automáticamente el repositorio de SadTalker y sus modelos
-    pre-entrenados en el entorno de Google Colab.
+    pre-entrenados en el entorno de Google Colab de forma ultra-robusta.
     """
     print("\n[CONFIGURACIÓN] Preparando entorno de SadTalker...")
     
@@ -37,12 +37,36 @@ def setup_sadtalker():
     else:
         print("Modelos pre-entrenados ya detectados.")
 
-    # 3. Instalar requerimientos específicos
+    # 3. Instalar requerimientos de forma segura sin compilar versiones obsoletas
     print("Instalando dependencias de Python requeridas por el pipeline...")
-    # Asegurar distutils en Colab para evitar fallos de librerías antiguas
-    os.system("apt-get install -y python3-pip ffmpeg")
-    os.system("pip install torch==1.12.1+cu113 torchvision==0.13.1+cu113 torchaudio==0.12.1 --extra-index-url https://download.pytorch.org/whl/cu113")
-    os.system("pip install -r SadTalker/requirements.txt")
+    
+    # Actualizar índices de apt e instalar ffmpeg
+    os.system("apt-get update -y -qq && apt-get install -y -qq ffmpeg")
+    
+    # Lista de paquetes necesarios (sin pins obsoletos para evitar compilación desde código fuente)
+    packages = [
+        "edge-tts", 
+        "moviepy", 
+        "srt", 
+        "yacs", 
+        "gfpgan", 
+        "facexlib", 
+        "librosa", 
+        "resampy", 
+        "pydub", 
+        "scipy", 
+        "kornia", 
+        "face_alignment", 
+        "imageio", 
+        "imageio-ffmpeg", 
+        "numba", 
+        "pyyaml", 
+        "joblib", 
+        "scikit-image"
+    ]
+    
+    # Instalar paquetes en Colab
+    os.system(f"pip install {' '.join(packages)}")
     print("[CONFIGURACIÓN] Entorno de SadTalker listo.")
 
 def upload_assets():
