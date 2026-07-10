@@ -48,7 +48,7 @@ def download_sadtalker_models():
         (f"{base}/mapping_00229-model.pth.tar",         "SadTalker/checkpoints/mapping_00229-model.pth.tar"),
         (f"{base}/SadTalker_V0.0.2_256.safetensors",    "SadTalker/checkpoints/SadTalker_V0.0.2_256.safetensors"),
         (f"{base}/SadTalker_V0.0.2_512.safetensors",    "SadTalker/checkpoints/SadTalker_V0.0.2_512.safetensors"),
-        (f"{base}/epoch_20.pth",                        "SadTalker/checkpoints/epoch_20.pth"),
+        ("https://github.com/OpenTalker/SadTalker/releases/download/v0.0.2/epoch_20.pth", "SadTalker/checkpoints/epoch_20.pth"),
         # Pesos de GFPGAN para el enhancer facial
         (f"{gfpgan_base}/v0.1.0/alignment_WFLW_4HG.pth",     "SadTalker/gfpgan/weights/alignment_WFLW_4HG.pth"),
         (f"{gfpgan_base}/v0.1.0/detection_Resnet50_Final.pth","SadTalker/gfpgan/weights/detection_Resnet50_Final.pth"),
