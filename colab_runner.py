@@ -44,7 +44,7 @@ def setup_sadtalker():
     os.system("apt-get update -y -qq && apt-get install -y -qq ffmpeg")
     
     # Lista de paquetes necesarios
-    # Se agrega "numpy<2.0" para evitar el fallo de VisibleDeprecationWarning en Python 3.12 de Colab
+    # Se fuerza numpy < 2.0 para compatibilidad de SadTalker con Python 3.12 en Colab
     packages = [
         "numpy<2.0",
         "edge-tts", 
@@ -67,9 +67,15 @@ def setup_sadtalker():
         "scikit-image"
     ]
     
-    # Instalar paquetes en Colab
-    os.system(f"pip install {' '.join(packages)}")
-    print("[CONFIGURACIÓN] Entorno de SadTalker listo.")
+    # Instalar paquetes de forma segura en Colab usando subprocess (evita redirección de shell con "<")
+    import subprocess
+    try:
+        print("Ejecutando instalación silenciosa de paquetes...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-q"] + packages)
+        print("[CONFIGURACIÓN] Entorno de SadTalker listo.")
+    except subprocess.CalledProcessError as e:
+        print(f"[ERROR] Falló la instalación de paquetes con pip: {e}")
+        sys.exit(1)
 
 def check_and_rename_assets():
     """
