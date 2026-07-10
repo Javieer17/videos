@@ -14,6 +14,63 @@ def check_colab() -> bool:
         return False
 
 
+def _download_file(url, dest):
+    """Descarga un archivo con verificación. Reintenta si falla."""
+    import urllib.request
+    dest_dir = os.path.dirname(dest)
+    if dest_dir:
+        os.makedirs(dest_dir, exist_ok=True)
+    if os.path.exists(dest) and os.path.getsize(dest) > 1_000_000:
+        return  # ya descargado y tiene tamaño razonable
+    basename = os.path.basename(dest)
+    print(f"   ↓ Descargando {basename}...")
+    for attempt in range(3):
+        try:
+            urllib.request.urlretrieve(url, dest)
+            size_mb = os.path.getsize(dest) / 1_048_576
+            print(f"     ✓ {basename} ({size_mb:.0f} MB)")
+            return
+        except Exception as e:
+            print(f"     ⚠ Intento {attempt+1} fallido: {e}")
+    print(f"     ✗ ERROR: No se pudo descargar {basename}")
+    sys.exit(1)
+
+
+def download_sadtalker_models():
+    """Descarga cada checkpoint de SadTalker individualmente con verificación."""
+    base = "https://github.com/OpenTalker/SadTalker/releases/download/v0.0.2-rc"
+    gfpgan_base = "https://github.com/xinntao/facexlib/releases/download"
+    gfpgan_v1 = "https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0"
+
+    # Checkpoints principales de SadTalker
+    models = [
+        (f"{base}/mapping_00109-model.pth.tar",         "SadTalker/checkpoints/mapping_00109-model.pth.tar"),
+        (f"{base}/mapping_00229-model.pth.tar",         "SadTalker/checkpoints/mapping_00229-model.pth.tar"),
+        (f"{base}/SadTalker_V0.0.2_256.safetensors",    "SadTalker/checkpoints/SadTalker_V0.0.2_256.safetensors"),
+        (f"{base}/SadTalker_V0.0.2_512.safetensors",    "SadTalker/checkpoints/SadTalker_V0.0.2_512.safetensors"),
+        (f"{base}/epoch_20.pth",                        "SadTalker/checkpoints/epoch_20.pth"),
+        # Pesos de GFPGAN para el enhancer facial
+        (f"{gfpgan_base}/v0.1.0/alignment_WFLW_4HG.pth",     "SadTalker/gfpgan/weights/alignment_WFLW_4HG.pth"),
+        (f"{gfpgan_base}/v0.1.0/detection_Resnet50_Final.pth","SadTalker/gfpgan/weights/detection_Resnet50_Final.pth"),
+        (f"{gfpgan_v1}/GFPGANv1.4.pth",                      "SadTalker/gfpgan/weights/GFPGANv1.4.pth"),
+        (f"{gfpgan_base}/v0.2.2/parsing_parsenet.pth",        "SadTalker/gfpgan/weights/parsing_parsenet.pth"),
+    ]
+
+    # Verificar si todos ya existen
+    all_present = all(
+        os.path.exists(dest) and os.path.getsize(dest) > 1_000_000
+        for _, dest in models
+    )
+    if all_present:
+        print("Modelos pre-entrenados ya verificados ✓")
+        return
+
+    print("Descargando modelos pre-entrenados (~2 GB)...")
+    for url, dest in models:
+        _download_file(url, dest)
+    print("Descarga de modelos completada ✓")
+
+
 def setup_sadtalker():
     """
     Descarga e instala SadTalker y sus modelos pre-entrenados,
@@ -27,16 +84,8 @@ def setup_sadtalker():
         print("Clonando el repositorio oficial de SadTalker...")
         os.system("git clone https://github.com/Winfredy/SadTalker.git")
 
-    # 2. Descargar checkpoints
-    if not os.path.exists("SadTalker/checkpoints"):
-        print("Descargando modelos pre-entrenados (~2 GB)...")
-        cwd = os.getcwd()
-        os.chdir("SadTalker")
-        os.system("bash scripts/download_models.sh")
-        os.chdir(cwd)
-        print("Descarga de modelos completada.")
-    else:
-        print("Modelos pre-entrenados ya detectados.")
+    # 2. Descargar checkpoints individualmente (el script bash falla silenciosamente)
+    download_sadtalker_models()
 
     # 3. Instalar paquetes (sin bajar numpy — eso rompe jax, opencv, cupy, etc.)
     print("Instalando dependencias de Python...")
