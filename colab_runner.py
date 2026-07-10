@@ -329,16 +329,29 @@ def main():
 
     # 6. Animación facial (SadTalker en GPU)
     print("\n[PASO 2/3] Animando avatar con IA (GPU)...")
+    
+    # Rutas absolutas para evitar fallos de resolución al cambiar de directorio
+    audio_wav_abs = os.path.abspath(audio_wav)
+    avatar_img_abs = os.path.abspath("avatar.png")
+    result_dir_abs = os.path.abspath("output/sadtalker_temp")
+    
+    # Cambiar al directorio de SadTalker para ejecutar la inferencia
+    current_dir = os.getcwd()
+    os.chdir("SadTalker")
+    
     sadtalker_cmd = (
-        f"python SadTalker/inference.py "
-        f"--driven_audio {audio_wav} "
-        f"--source_image avatar.png "
-        f"--result_dir output/sadtalker_temp "
+        f"python inference.py "
+        f"--driven_audio {audio_wav_abs} "
+        f"--source_image {avatar_img_abs} "
+        f"--result_dir {result_dir_abs} "
         f"--still "
         f"--preprocess full "
         f"--enhancer gfpgan"
     )
     ret = os.system(sadtalker_cmd)
+    
+    # Restaurar directorio de trabajo
+    os.chdir(current_dir)
 
     generated = glob.glob("output/sadtalker_temp/*.mp4")
     if not generated:
