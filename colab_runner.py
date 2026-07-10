@@ -2,8 +2,6 @@ import os
 import sys
 import shutil
 import glob
-from tts_generator import generate_speech
-from video_composer import composite_video_for_format
 
 def check_colab() -> bool:
     """
@@ -94,8 +92,13 @@ def main():
     print("  PROCESADOR CLOUD AUTOMÁTICO DE VIDEO IA - FINANZAS (GOOGLE COLAB)")
     print("="*75)
 
-    # 1. Configurar instalación de dependencias y modelos
+    # 1. Configurar instalación de dependencias y modelos (esto instala edge-tts, moviepy, etc.)
     setup_sadtalker()
+
+    # Importación diferida para evitar ModuleNotFoundError antes de la instalación de paquetes
+    print("\nCargando módulos de composición y locución...")
+    from tts_generator import generate_speech
+    from video_composer import composite_video_for_format
 
     # 2. Solicitar al usuario subir las imágenes
     avatar_img, office_bg = upload_assets()
