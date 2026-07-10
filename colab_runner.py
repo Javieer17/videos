@@ -43,8 +43,10 @@ def setup_sadtalker():
     # Actualizar índices de apt e instalar ffmpeg
     os.system("apt-get update -y -qq && apt-get install -y -qq ffmpeg")
     
-    # Lista de paquetes necesarios (sin pins obsoletos para evitar compilación desde código fuente)
+    # Lista de paquetes necesarios
+    # Se agrega "numpy<2.0" para evitar el fallo de VisibleDeprecationWarning en Python 3.12 de Colab
     packages = [
+        "numpy<2.0",
         "edge-tts", 
         "moviepy", 
         "srt", 
