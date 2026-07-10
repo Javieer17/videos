@@ -1,0 +1,14 @@
+1
+00:00:00,500 --> 00:00:03,500
+Hola, esta es una prueba del
+compositor de video de Micron.
+
+2
+00:00:04,000 --> 00:00:07,000
+El chroma key y los subtítulos
+se aplican correctamente.
+
+3
+00:00:07,500 --> 00:00:09,500
+¡El renderizado vertical y
+horizontal funciona!
