@@ -385,13 +385,13 @@ def main():
         bg_path="background.png", avatar_path=avatar_video,
         audio_path=audio_mp3, srt_path=srt_subs,
         output_path=out_h, format_type="horizontal",
-        chroma_settings={"detect_color": True, "thr": 85, "s": 5},
+        chroma_settings={"detect_color": True, "thr": 25, "s": 5},
     )
     composite_video_for_format(
         bg_path="background.png", avatar_path=avatar_video,
         audio_path=audio_mp3, srt_path=srt_subs,
         output_path=out_v, format_type="vertical",
-        chroma_settings={"detect_color": True, "thr": 85, "s": 5},
+        chroma_settings={"detect_color": True, "thr": 25, "s": 5},
     )
 
     print("\n" + "=" * 75)

@@ -224,7 +224,7 @@ def composite_video_for_format(
     combinación de audio y renderizado de subtítulos según el formato.
     """
     if chroma_settings is None:
-        chroma_settings = {"detect_color": True, "color": [0, 255, 0], "thr": 100, "s": 5}
+        chroma_settings = {"detect_color": True, "color": [0, 255, 0], "thr": 25, "s": 5}
 
     # Definir resoluciones de salida
     if format_type == "horizontal":
