@@ -45,10 +45,12 @@ def clip_resized(clip, size):
     return clip
 
 def apply_mask_color(clip, color, thr=100, s=5):
+    # Convertir a flotantes estándar para evitar desbordamiento/envoltura de uint8 en NumPy
+    color_float = [float(c) for c in color]
     if HAS_MOVIEPY_1:
-        return mask_color(clip, color=color, thr=thr, s=s)
+        return mask_color(clip, color=color_float, thr=thr, s=s)
     else:
-        return clip.with_effects([fx.MaskColor(color=color, threshold=thr, stiffness=s)])
+        return clip.with_effects([fx.MaskColor(color=color_float, threshold=thr, stiffness=s)])
 
 def apply_loop(clip, duration):
     if HAS_MOVIEPY_1:
@@ -263,7 +265,7 @@ def composite_video_for_format(
         # Detectar el color de fondo para el croma
         if chroma_settings.get("detect_color", True):
             first_frame = avatar_clip.get_frame(0)
-            bg_color = list(first_frame[0, 0])
+            bg_color = [int(x) for x in first_frame[0, 0]]
             print(f"Color de fondo detectado en el primer pixel (croma): {bg_color}")
         else:
             bg_color = chroma_settings.get("color", [0, 255, 0])
